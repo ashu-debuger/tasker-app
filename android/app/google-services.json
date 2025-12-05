@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "741333746986",
+    "project_id": "dev-mantra-india",
+    "storage_bucket": "dev-mantra-india.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741333746986:android:bf6552eb5ddff6d9960a53",
+        "android_client_info": {
+          "package_name": "in.devmantra.tasker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDWB93UKHRYgjhib8Y6A4_CC12fhruRb0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

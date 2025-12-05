@@ -1,0 +1,26 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "dev-mantra-india",
+          "appId": "1:741333746986:android:bf6552eb5ddff6d9960a53",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "dev-mantra-india",
+          "configurations": {
+            "android": "1:741333746986:android:bf6552eb5ddff6d9960a53",
+            "ios": "1:741333746986:ios:260250adfe2f518a960a53"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
