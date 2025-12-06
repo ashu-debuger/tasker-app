@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/providers.dart';
 import '../../domain/models/member_invitation.dart';
 import '../../domain/models/project_role.dart';
+import '../notifiers/project_list_notifier.dart';
 import '../../../auth/presentation/notifiers/auth_notifier.dart';
 import '../../../../core/utils/app_logger.dart';
 
@@ -119,8 +120,9 @@ class InvitationNotifier extends _$InvitationNotifier {
       final repository = ref.read(invitationRepositoryProvider);
       await repository.acceptInvitation(invitationId);
 
-      // Refresh projects list after accepting
-      ref.invalidate(authProvider);
+      // Refresh projects and invitations after accepting
+      ref.invalidate(projectListProvider);
+      ref.invalidate(userInvitationsProvider);
 
       appLogger.i(
         '[InvitationNotifier] acceptInvitation success invitationId=$invitationId',
