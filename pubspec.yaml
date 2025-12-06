@@ -76,6 +76,7 @@ dependencies:
   # Notifications
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
+  firebase_messaging: ^16.0.4
 
   # Platform features
   quick_actions: ^1.0.5

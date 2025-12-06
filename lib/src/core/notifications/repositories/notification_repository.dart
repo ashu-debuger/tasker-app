@@ -16,13 +16,19 @@ abstract class NotificationRepository {
   Stream<int> streamUnreadCount(String userId);
 
   /// Mark a notification as read
-  Future<void> markAsRead(String notificationId);
+  Future<void> markAsRead({
+    required String userId,
+    required String notificationId,
+  });
 
   /// Mark all notifications as read for a user
   Future<void> markAllAsRead(String userId);
 
   /// Delete a notification
-  Future<void> deleteNotification(String notificationId);
+  Future<void> deleteNotification({
+    required String userId,
+    required String notificationId,
+  });
 
   /// Delete all notifications for a user
   Future<void> deleteAllNotifications(String userId);
@@ -37,4 +43,10 @@ abstract class NotificationRepository {
     Map<String, dynamic>? data,
     String? actionUrl,
   });
+
+  /// Save FCM token for a user
+  Future<void> saveFcmToken(String userId, String token);
+
+  /// Delete FCM token for a user
+  Future<void> deleteFcmToken(String userId, String token);
 }

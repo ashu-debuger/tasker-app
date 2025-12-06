@@ -3,13 +3,18 @@ import '../models/app_notification.dart';
 import '../models/notification_type.dart';
 import 'notification_repository.dart';
 import '../../utils/app_logger.dart';
+import '../../services/notification_api_service.dart';
 
 /// Firebase implementation of NotificationRepository
 class FirebaseNotificationRepository implements NotificationRepository {
   final FirebaseFirestore _firestore;
+  final NotificationApiService? _apiService;
   static const _logTag = '[Notifications:Repo]';
 
-  FirebaseNotificationRepository(this._firestore);
+  FirebaseNotificationRepository(
+    this._firestore, {
+    NotificationApiService? apiService,
+  }) : _apiService = apiService;
 
   /// Get notifications collection for a user
   CollectionReference _userNotificationsCollection(String userId) =>
@@ -109,15 +114,16 @@ class FirebaseNotificationRepository implements NotificationRepository {
   }
 
   @override
-  Future<void> markAsRead(String notificationId) async {
+  Future<void> markAsRead({
+    required String userId,
+    required String notificationId,
+  }) async {
     appLogger.d('$_logTag markAsRead id=$notificationId');
     try {
-      // We need the userId to access the notification
-      // This is a limitation - we could query all users, but that's inefficient
-      // Better approach: pass userId as parameter
-      throw UnimplementedError(
-        'markAsRead requires userId parameter - use notification document reference',
-      );
+      await _userNotificationsCollection(
+        userId,
+      ).doc(notificationId).update({'isRead': true});
+      appLogger.i('$_logTag markAsRead success id=$notificationId');
     } catch (e, stackTrace) {
       appLogger.e(
         '$_logTag markAsRead failed',
@@ -177,8 +183,22 @@ class FirebaseNotificationRepository implements NotificationRepository {
   }
 
   @override
-  Future<void> deleteNotification(String notificationId) async {
-    throw UnimplementedError('deleteNotification requires userId parameter');
+  Future<void> deleteNotification({
+    required String userId,
+    required String notificationId,
+  }) async {
+    appLogger.w('$_logTag deleteNotification id=$notificationId');
+    try {
+      await _userNotificationsCollection(userId).doc(notificationId).delete();
+      appLogger.i('$_logTag deleteNotification success id=$notificationId');
+    } catch (e, stackTrace) {
+      appLogger.e(
+        '$_logTag deleteNotification failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   /// Delete a specific notification (with userId)
@@ -251,6 +271,16 @@ class FirebaseNotificationRepository implements NotificationRepository {
       );
 
       await createNotification(notification);
+
+      // Also send push notification
+      await _sendPushNotification(
+        userId: userId,
+        title: title,
+        body: body,
+        imageUrl: imageUrl,
+        data: data,
+      );
+
       appLogger.i('$_logTag sendNotification success id=${notification.id}');
     } catch (e, stackTrace) {
       appLogger.e(
@@ -259,6 +289,96 @@ class FirebaseNotificationRepository implements NotificationRepository {
         stackTrace: stackTrace,
       );
       rethrow;
+    }
+  }
+
+  /// Send push notification via backend API
+  Future<void> _sendPushNotification({
+    required String userId,
+    required String title,
+    required String body,
+    String? imageUrl,
+    Map<String, dynamic>? data,
+  }) async {
+    if (_apiService == null) {
+      appLogger.d('$_logTag Push notification API not configured, skipping');
+      return;
+    }
+
+    try {
+      appLogger.i('$_logTag Sending push notification via API to $userId');
+
+      // Prepare data with image URL if provided
+      final notificationData = <String, dynamic>{
+        if (data != null) ...data,
+        if (imageUrl != null) 'imageUrl': imageUrl,
+      };
+
+      // Send via backend API
+      final success = await _apiService!.sendToUser(
+        userId: userId,
+        title: title,
+        body: body,
+        data: notificationData.isNotEmpty ? notificationData : null,
+      );
+
+      if (success) {
+        appLogger.i('$_logTag Push notification sent successfully');
+      } else {
+        appLogger.w('$_logTag Push notification failed');
+      }
+    } catch (e, stackTrace) {
+      appLogger.e(
+        '$_logTag _sendPushNotification failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      // Don't rethrow - notification was already created in Firestore
+      // Push notification is best-effort
+    }
+  }
+
+  /// Save FCM token for a user
+  Future<void> saveFcmToken(String userId, String token) async {
+    appLogger.d('$_logTag saveFcmToken userId=$userId');
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('fcmTokens')
+          .doc(token)
+          .set({
+            'token': token,
+            'createdAt': FieldValue.serverTimestamp(),
+            'lastUsed': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+      appLogger.i('$_logTag saveFcmToken success');
+    } catch (e, stackTrace) {
+      appLogger.e(
+        '$_logTag saveFcmToken failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// Delete FCM token for a user
+  Future<void> deleteFcmToken(String userId, String token) async {
+    appLogger.d('$_logTag deleteFcmToken userId=$userId');
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('fcmTokens')
+          .doc(token)
+          .delete();
+      appLogger.i('$_logTag deleteFcmToken success');
+    } catch (e, stackTrace) {
+      appLogger.e(
+        '$_logTag deleteFcmToken failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 }

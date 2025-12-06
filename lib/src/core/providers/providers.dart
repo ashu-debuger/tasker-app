@@ -32,6 +32,9 @@ import '../encryption/encryption_service.dart';
 import '../notifications/notification_service.dart';
 import '../notifications/repositories/notification_repository.dart';
 import '../notifications/repositories/firebase_notification_repository.dart';
+import '../notifications/services/push_notification_service.dart';
+import '../notifications/services/notification_listener_service.dart';
+import '../services/notification_api_service.dart';
 import '../quick_actions/quick_action_service.dart';
 import '../notifications/tile_action_service.dart';
 
@@ -205,7 +208,25 @@ ProjectMemberRepository projectMemberRepository(Ref ref) {
 /// NotificationRepository provider
 @riverpod
 NotificationRepository notificationRepository(Ref ref) {
-  return FirebaseNotificationRepository(ref.watch(firestoreProvider));
+  return FirebaseNotificationRepository(
+    ref.watch(firestoreProvider),
+    apiService: NotificationApiService(),
+  );
+}
+
+/// PushNotificationService provider
+@riverpod
+PushNotificationService pushNotificationService(Ref ref) {
+  return PushNotificationService();
+}
+
+/// NotificationListenerService provider
+@riverpod
+NotificationListenerService notificationListenerService(Ref ref) {
+  return NotificationListenerService(
+    firestore: ref.watch(firestoreProvider),
+    pushService: ref.watch(pushNotificationServiceProvider),
+  );
 }
 
 // State notifier providers for feature state management

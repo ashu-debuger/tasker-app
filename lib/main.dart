@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,8 @@ import 'src/core/config/env_config.dart';
 import 'src/core/notifications/notification_service.dart';
 import 'src/core/quick_actions/quick_action_listener.dart';
 import 'src/core/routing/app_router.dart';
+import 'src/core/services/simple_fcm_service.dart';
+import 'src/core/services/simple_background_handler.dart';
 import 'src/core/storage/hive_service.dart';
 import 'src/extensions/plugin_registry.dart';
 
@@ -20,11 +23,17 @@ Future<void> main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Register FCM background handler for when app is closed
+  FirebaseMessaging.onBackgroundMessage(simpleBackgroundHandler);
+
   // Initialize Hive for offline storage
   await HiveService.init();
 
   // Initialize notification service
   await NotificationService().initialize();
+
+  // Initialize simple FCM service
+  await SimpleFcmService().initialize();
 
   runApp(const ProviderScope(child: MyApp()));
 }
