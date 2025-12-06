@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/providers.dart';
+import '../../../auth/presentation/notifiers/auth_notifier.dart';
 import '../../domain/models/project.dart';
 import '../../domain/models/project_member.dart';
 import '../../domain/models/project_role.dart';
@@ -49,6 +50,21 @@ class ProjectMembersNotifier extends _$ProjectMembersNotifier {
 
     try {
       final repository = ref.read(projectMemberRepositoryProvider);
+
+      // Permission: only owner/admin can add members
+      final currentUser = ref.read(authProvider).value;
+      final currentUserId = currentUser?.id;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
+      }
+      final currentRole = await repository.getUserRole(
+        projectId: projectId,
+        userId: currentUserId,
+      );
+      if (currentRole == null || !currentRole.isAdmin) {
+        throw Exception('You do not have permission to add members');
+      }
+
       await repository.addMember(
         projectId: projectId,
         userId: userId,
@@ -76,6 +92,21 @@ class ProjectMembersNotifier extends _$ProjectMembersNotifier {
 
     try {
       final repository = ref.read(projectMemberRepositoryProvider);
+
+      // Permission: only owner/admin can remove members
+      final currentUser = ref.read(authProvider).value;
+      final currentUserId = currentUser?.id;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
+      }
+      final currentRole = await repository.getUserRole(
+        projectId: projectId,
+        userId: currentUserId,
+      );
+      if (currentRole == null || !currentRole.isAdmin) {
+        throw Exception('You do not have permission to remove members');
+      }
+
       await repository.removeMember(projectId: projectId, userId: userId);
 
       state = state.copyWith(
@@ -100,6 +131,21 @@ class ProjectMembersNotifier extends _$ProjectMembersNotifier {
 
     try {
       final repository = ref.read(projectMemberRepositoryProvider);
+
+      // Permission: only owner/admin can change roles
+      final currentUser = ref.read(authProvider).value;
+      final currentUserId = currentUser?.id;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
+      }
+      final currentRole = await repository.getUserRole(
+        projectId: projectId,
+        userId: currentUserId,
+      );
+      if (currentRole == null || !currentRole.isAdmin) {
+        throw Exception('You do not have permission to change roles');
+      }
+
       await repository.updateMemberRole(
         projectId: projectId,
         userId: userId,

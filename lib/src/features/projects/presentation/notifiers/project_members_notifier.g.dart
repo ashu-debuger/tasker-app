@@ -45,7 +45,7 @@ final class ProjectMembersNotifierProvider
 }
 
 String _$projectMembersNotifierHash() =>
-    r'429ae54ddeb5cce7f448bcea53680094366803cf';
+    r'830235638be3ab12c9de21d103a7898c959371a7';
 
 /// Notifier for managing project members
 

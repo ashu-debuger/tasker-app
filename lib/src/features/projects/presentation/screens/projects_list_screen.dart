@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../notifiers/project_list_notifier.dart';
 import '../notifiers/invitation_notifier.dart';
+import '../notifiers/project_members_notifier.dart';
 import '../../domain/models/project.dart';
 import '../../../auth/presentation/notifiers/auth_notifier.dart';
 import '../../../../core/routing/app_router.dart';
@@ -556,6 +557,15 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                   itemCount: projects.length,
                   itemBuilder: (context, index) {
                     final project = projects[index];
+                    final currentUser = ref.watch(authProvider).value;
+                    final roleAsync = currentUser != null && !project.isSystem
+                        ? ref.watch(
+                            memberRoleProvider(project.id, currentUser.id),
+                          )
+                        : null;
+                    final canDelete =
+                        project.ownerId == currentUser?.id ||
+                        (roleAsync?.asData?.value?.isAdmin ?? false);
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
@@ -607,7 +617,20 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                                       );
                                       break;
                                     case _ProjectMenuAction.delete:
-                                      _confirmDeleteProject(project);
+                                      if (canDelete) {
+                                        _confirmDeleteProject(project);
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Only admins and owners can delete projects',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
                                       break;
                                   }
                                 },
@@ -622,21 +645,23 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                                       ],
                                     ),
                                   ),
-                                  const PopupMenuDivider(),
-                                  PopupMenuItem(
-                                    value: _ProjectMenuAction.delete,
-                                    child: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                          size: 18,
-                                        ),
-                                        SizedBox(width: 12),
-                                        Text('Delete Project'),
-                                      ],
+                                  if (canDelete) ...[
+                                    const PopupMenuDivider(),
+                                    PopupMenuItem(
+                                      value: _ProjectMenuAction.delete,
+                                      child: Row(
+                                        children: const [
+                                          Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                            size: 18,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Delete Project'),
+                                        ],
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               )
                             else

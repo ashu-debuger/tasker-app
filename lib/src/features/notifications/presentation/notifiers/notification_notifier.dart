@@ -22,7 +22,12 @@ class NotificationList extends _$NotificationList {
   }
 
   Future<void> markAsRead(String notificationId) async {
-    await _repository.markAsRead(notificationId);
+    final user = ref.read(authStateChangesProvider).value;
+    if (user == null) return;
+    await _repository.markAsRead(
+      userId: user.uid,
+      notificationId: notificationId,
+    );
   }
 
   Future<void> markAllAsRead() async {
@@ -33,7 +38,12 @@ class NotificationList extends _$NotificationList {
   }
 
   Future<void> deleteNotification(String notificationId) async {
-    await _repository.deleteNotification(notificationId);
+    final user = ref.read(authStateChangesProvider).value;
+    if (user == null) return;
+    await _repository.deleteNotification(
+      userId: user.uid,
+      notificationId: notificationId,
+    );
   }
 
   Future<void> deleteAllNotifications() async {

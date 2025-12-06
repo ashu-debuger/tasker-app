@@ -162,11 +162,11 @@ Manage tasks directly from Zoho Cliq:
 
 ## 🔗 Related Repositories
 
-| Repository                                                            | Description                            |
-| --------------------------------------------------------------------- | -------------------------------------- |
-| [📱 Tasker App](https://github.com/ashu-debuger/tasker-app)            | Flutter mobile application (this repo) |
-| [⚙️ Tasker Backend](https://github.com/ashu-debuger/tasker-backend)    | Node.js API & Zoho Cliq integration    |
-| [📥 Download APK](https://github.com/ashu-debuger/ESD-App-Download)    | Latest Android release                 |
+| Repository                                                         | Description                            |
+| ------------------------------------------------------------------ | -------------------------------------- |
+| [📱 Tasker App](https://github.com/ashu-debuger/tasker-app)         | Flutter mobile application (this repo) |
+| [⚙️ Tasker Backend](https://github.com/ashu-debuger/tasker-backend) | Node.js API & Zoho Cliq integration    |
+| [📥 Download APK](https://github.com/ashu-debuger/ESD-App-Download) | Latest Android release                 |
 
 ---
 

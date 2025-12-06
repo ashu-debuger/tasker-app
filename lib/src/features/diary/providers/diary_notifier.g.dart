@@ -43,7 +43,7 @@ final class DiaryProvider extends $NotifierProvider<Diary, DiaryState> {
   }
 }
 
-String _$diaryHash() => r'12fabe3c6dc7ae89bc28dda739758fd25517b5cf';
+String _$diaryHash() => r'83ea0b9bc867368accf49bd7a3572627b651d398';
 
 /// Notifier for managing diary state
 

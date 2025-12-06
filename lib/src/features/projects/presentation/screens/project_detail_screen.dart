@@ -15,6 +15,7 @@ import '../../../auth/presentation/notifiers/auth_notifier.dart';
 import '../../domain/models/project.dart';
 import '../notifiers/project_detail_notifier.dart';
 import '../notifiers/project_members_notifier.dart';
+import '../../domain/models/project_role.dart';
 import '../widgets/member_management_dialog.dart';
 import '../widgets/invitation_bottom_sheet.dart';
 
@@ -706,7 +707,11 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
     }
   }
 
-  Widget _buildTasksTab(ProjectDetailState state, List<Task> filteredTasks) {
+  Widget _buildTasksTab(
+    ProjectDetailState state,
+    List<Task> filteredTasks,
+    bool canEditTasks,
+  ) {
     return Column(
       children: [
         // Project info card
@@ -813,7 +818,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Create a task to get started',
+                        canEditTasks
+                            ? 'Create a task to get started'
+                            : 'No tasks available',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[500],
                         ),
@@ -826,7 +833,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
                   itemCount: filteredTasks.length,
                   itemBuilder: (context, index) {
                     final task = filteredTasks[index];
-                    return _buildTaskCard(task);
+                    return _buildTaskCard(task, canEditTasks);
                   },
                 ),
         ),
@@ -834,15 +841,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
     );
   }
 
-  Widget _buildMembersTab(ProjectDetailState state) {
+  Widget _buildMembersTab(ProjectDetailState state, bool canManageMembers) {
     final project = state.project!;
     final currentUser = ref.watch(authProvider).value;
     final membersAsync = ref.watch(projectMembersListProvider(project.id));
-
-    final userRole = currentUser != null
-        ? project.getUserRole(currentUser.id)
-        : null;
-    final canManageMembers = userRole?.isAdmin ?? false;
+    final isOwner = currentUser?.id == project.ownerId;
+    final canManage = canManageMembers || isOwner;
 
     return Column(
       children: [
@@ -859,7 +863,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
-              if (canManageMembers) ...[
+              if (canManage) ...[
                 OutlinedButton.icon(
                   onPressed: () {
                     showInvitationBottomSheet(
@@ -907,7 +911,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
                           color: Colors.grey[600],
                         ),
                       ),
-                      if (canManageMembers) ...[
+                      if (canManage) ...[
                         const SizedBox(height: 8),
                         Text(
                           'Invite team members to collaborate',
@@ -1003,6 +1007,15 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
     final projectDetailStream = ref.watch(
       projectDetailProvider(widget.projectId),
     );
+    final currentUser = ref.watch(authProvider).value;
+    final roleAsync = currentUser != null
+        ? ref.watch(memberRoleProvider(widget.projectId, currentUser.id))
+        : const AsyncValue<ProjectRole?>.data(null);
+    final currentRole = roleAsync.asData?.value;
+    final canEditTasks = currentRole?.canEdit ?? false;
+    final canManageMembers =
+        (currentRole?.isAdmin ?? false) ||
+        currentUser?.id == projectDetailStream.asData?.value.project?.ownerId;
     final projectDetailValue = projectDetailStream.asData?.value;
 
     return Scaffold(
@@ -1124,27 +1137,28 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
               ),
             ],
           ),
-          PopupMenuButton<_ProjectDetailMenuAction>(
-            icon: const Icon(Icons.more_vert),
-            tooltip: 'Project actions',
-            onSelected: (action) {
-              if (action == _ProjectDetailMenuAction.delete) {
-                _confirmDeleteProject();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: _ProjectDetailMenuAction.delete,
-                child: Row(
-                  children: const [
-                    Icon(Icons.delete, color: Colors.red),
-                    SizedBox(width: 12),
-                    Text('Delete project'),
-                  ],
+          if (canManageMembers)
+            PopupMenuButton<_ProjectDetailMenuAction>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: 'Project actions',
+              onSelected: (action) {
+                if (action == _ProjectDetailMenuAction.delete) {
+                  _confirmDeleteProject();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: _ProjectDetailMenuAction.delete,
+                  child: Row(
+                    children: const [
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 12),
+                      Text('Delete project'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
       body: projectDetailStream.when(
@@ -1178,7 +1192,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
               widget.projectId == Project.personalProjectId;
 
           if (isPersonalProject) {
-            return _buildTasksTab(state, filteredTasks);
+            return _buildTasksTab(state, filteredTasks, canEditTasks);
           }
 
           return Column(
@@ -1198,10 +1212,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
                   controller: _tabController,
                   children: [
                     // Tasks Tab
-                    _buildTasksTab(state, filteredTasks),
+                    _buildTasksTab(state, filteredTasks, canEditTasks),
 
                     // Members Tab
-                    _buildMembersTab(state),
+                    _buildMembersTab(state, canManageMembers),
                   ],
                 ),
               ),
@@ -1232,11 +1246,13 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
         ),
       ),
       floatingActionButton: projectDetailStream.maybeWhen(
-        data: (state) => FloatingActionButton.extended(
-          onPressed: () => _showCreateTaskDialog(),
-          icon: const Icon(Icons.add),
-          label: const Text('New Task'),
-        ),
+        data: (state) => canEditTasks
+            ? FloatingActionButton.extended(
+                onPressed: () => _showCreateTaskDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('New Task'),
+              )
+            : null,
         orElse: () => null,
       ),
     );
@@ -1244,23 +1260,30 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
 }
 
 extension on _ProjectDetailScreenState {
-  Widget _buildTaskCard(Task task) {
+  Widget _buildTaskCard(Task task, bool canEditTasks) {
     final summaryAsync = ref.watch(taskSubtaskSummaryProvider(task.id));
 
     return summaryAsync.when(
       data: (summary) {
         _syncTaskStatusWithSubtasks(task, summary);
-        return _taskTile(task, summary, isToggleEnabled: true);
+        return _taskTile(
+          task,
+          summary,
+          isToggleEnabled: canEditTasks,
+          canEditTasks: canEditTasks,
+        );
       },
       loading: () => _taskTile(
         task,
         const TaskSubtaskSummary.loading(),
         isToggleEnabled: false,
+        canEditTasks: canEditTasks,
       ),
       error: (error, stack) => _taskTile(
         task,
         const TaskSubtaskSummary.empty(),
-        isToggleEnabled: true,
+        isToggleEnabled: canEditTasks,
+        canEditTasks: canEditTasks,
       ),
     );
   }
@@ -1269,6 +1292,7 @@ extension on _ProjectDetailScreenState {
     Task task,
     TaskSubtaskSummary summary, {
     required bool isToggleEnabled,
+    required bool canEditTasks,
   }) {
     final subtitleChildren = <Widget>[];
 
@@ -1452,7 +1476,7 @@ extension on _ProjectDetailScreenState {
       child: ListTile(
         leading: Checkbox(
           value: task.status == TaskStatus.completed,
-          onChanged: isToggleEnabled
+          onChanged: isToggleEnabled && canEditTasks
               ? (value) {
                   if (value != null) {
                     _handleTaskCompletionToggle(task, summary, value);
@@ -1473,44 +1497,46 @@ extension on _ProjectDetailScreenState {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: subtitleChildren,
         ),
-        trailing: PopupMenuButton<_TaskTileMenuAction>(
-          tooltip: 'Task actions',
-          onSelected: (action) {
-            switch (action) {
-              case _TaskTileMenuAction.open:
-                context.push(
-                  '${AppRoutes.projects}/${widget.projectId}/tasks/${task.id}',
-                );
-                break;
-              case _TaskTileMenuAction.delete:
-                _confirmDeleteTask(task);
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: _TaskTileMenuAction.open,
-              child: Row(
-                children: const [
-                  Icon(Icons.open_in_new),
-                  SizedBox(width: 12),
-                  Text('Open details'),
+        trailing: canEditTasks
+            ? PopupMenuButton<_TaskTileMenuAction>(
+                tooltip: 'Task actions',
+                onSelected: (action) {
+                  switch (action) {
+                    case _TaskTileMenuAction.open:
+                      context.push(
+                        '${AppRoutes.projects}/${widget.projectId}/tasks/${task.id}',
+                      );
+                      break;
+                    case _TaskTileMenuAction.delete:
+                      _confirmDeleteTask(task);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: _TaskTileMenuAction.open,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.open_in_new),
+                        SizedBox(width: 12),
+                        Text('Open details'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: _TaskTileMenuAction.delete,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.delete, color: Colors.red),
+                        SizedBox(width: 12),
+                        Text('Delete task'),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem(
-              value: _TaskTileMenuAction.delete,
-              child: Row(
-                children: const [
-                  Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: 12),
-                  Text('Delete task'),
-                ],
-              ),
-            ),
-          ],
-        ),
+              )
+            : null,
         onTap: () {
           context.push(
             '${AppRoutes.projects}/${widget.projectId}/tasks/${task.id}',

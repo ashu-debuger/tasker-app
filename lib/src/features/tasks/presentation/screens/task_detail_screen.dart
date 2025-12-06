@@ -9,6 +9,8 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../shared/date_time_utils.dart' as date_utils;
 import '../widgets/task_assignment_dialog.dart';
 import '../../../projects/presentation/notifiers/project_members_notifier.dart';
+import '../../../auth/presentation/notifiers/auth_notifier.dart';
+import '../../../projects/domain/models/project_role.dart';
 
 /// Task detail screen showing subtasks and task info
 class TaskDetailScreen extends ConsumerStatefulWidget {
@@ -537,7 +539,10 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                           children: tags
                               .map(
                                 (tag) => Chip(
-                                  label: Text(tag, style: const TextStyle(fontSize: 12)),
+                                  label: Text(
+                                    tag,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                   deleteIcon: const Icon(Icons.close, size: 16),
                                   onDeleted: () {
                                     setState(() {
@@ -864,6 +869,12 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final taskDetailStream = ref.watch(taskDetailProvider(widget.taskId));
+    final currentUser = ref.watch(authProvider).value;
+    final roleAsync = currentUser != null
+        ? ref.watch(memberRoleProvider(widget.projectId, currentUser.id))
+        : const AsyncValue<ProjectRole?>.data(null);
+    final currentRole = roleAsync.asData?.value;
+    final canEdit = currentRole?.canEdit ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -894,6 +905,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           taskDetailStream.maybeWhen(
             data: (state) {
               if (state.task == null) return const SizedBox.shrink();
+              if (!canEdit) return const SizedBox.shrink();
               return PopupMenuButton<TaskStatus>(
                 icon: const Icon(Icons.more_vert),
                 tooltip: 'Update Status',
@@ -941,6 +953,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           taskDetailStream.maybeWhen(
             data: (state) {
               if (state.task == null) return const SizedBox.shrink();
+              if (!canEdit) return const SizedBox.shrink();
               return IconButton(
                 icon: const Icon(Icons.edit),
                 tooltip: 'Edit task',
@@ -952,6 +965,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           taskDetailStream.maybeWhen(
             data: (state) {
               if (state.task == null) return const SizedBox.shrink();
+              if (!canEdit) return const SizedBox.shrink();
               return IconButton(
                 icon: const Icon(Icons.delete),
                 tooltip: 'Delete task',
@@ -1047,7 +1061,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: _getPriorityColor(task.priority).withValues(alpha: 0.2),
+                              color: _getPriorityColor(
+                                task.priority,
+                              ).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
@@ -1153,7 +1169,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                           ),
                           const Spacer(),
                           TextButton.icon(
-                            onPressed: () => _showAssignmentDialog(task),
+                            onPressed: canEdit
+                                ? () => _showAssignmentDialog(task)
+                                : null,
                             icon: const Icon(Icons.person_add, size: 18),
                             label: Text(
                               task.assignees.isEmpty ? 'Assign' : 'Reassign',
@@ -1246,7 +1264,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     ),
                   ),
                   TextButton.icon(
-                    onPressed: _showCreateSubtaskDialog,
+                    onPressed: canEdit ? _showCreateSubtaskDialog : null,
                     icon: const Icon(Icons.add),
                     label: const Text('Add'),
                   ),
@@ -1290,7 +1308,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     child: ListTile(
                       leading: Checkbox(
                         value: subtask.isCompleted,
-                        onChanged: (value) => _toggleSubtask(subtask),
+                        onChanged: canEdit
+                            ? (value) => _toggleSubtask(subtask)
+                            : null,
                       ),
                       title: Text(
                         subtask.title,
@@ -1343,11 +1363,13 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete_outline),
-                        onPressed: () => _deleteSubtask(subtask),
+                        onPressed: canEdit
+                            ? () => _deleteSubtask(subtask)
+                            : null,
                         color: Colors.red[300],
                         tooltip: 'Delete subtask',
                       ),
-                      onTap: () => _toggleSubtask(subtask),
+                      onTap: canEdit ? () => _toggleSubtask(subtask) : null,
                     ),
                   );
                 }),

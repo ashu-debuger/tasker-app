@@ -12,7 +12,12 @@
           "package_name": "in.devmantra.tasker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "741333746986-n0b8pf9nega1bdebhmvqejr036u8loqv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBDWB93UKHRYgjhib8Y6A4_CC12fhruRb0"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "741333746986-n0b8pf9nega1bdebhmvqejr036u8loqv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "741333746986-s3nitvncjs56dmd3qt5emosqsvk7td23.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "in.devmantra.tasker"
+              }
+            }
+          ]
         }
       }
     }

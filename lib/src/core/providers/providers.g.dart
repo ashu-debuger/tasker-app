@@ -1099,6 +1099,113 @@ final class NotificationRepositoryProvider
 String _$notificationRepositoryHash() =>
     r'7d956ab41fc12edd57e12d82e497e233d51ba5d6';
 
+/// PushNotificationService provider
+
+@ProviderFor(pushNotificationService)
+const pushNotificationServiceProvider = PushNotificationServiceProvider._();
+
+/// PushNotificationService provider
+
+final class PushNotificationServiceProvider
+    extends
+        $FunctionalProvider<
+          PushNotificationService,
+          PushNotificationService,
+          PushNotificationService
+        >
+    with $Provider<PushNotificationService> {
+  /// PushNotificationService provider
+  const PushNotificationServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pushNotificationServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pushNotificationServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<PushNotificationService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  PushNotificationService create(Ref ref) {
+    return pushNotificationService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PushNotificationService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PushNotificationService>(value),
+    );
+  }
+}
+
+String _$pushNotificationServiceHash() =>
+    r'19b3f90803232d95ad8b78a5536ce82240c7efab';
+
+/// NotificationListenerService provider
+
+@ProviderFor(notificationListenerService)
+const notificationListenerServiceProvider =
+    NotificationListenerServiceProvider._();
+
+/// NotificationListenerService provider
+
+final class NotificationListenerServiceProvider
+    extends
+        $FunctionalProvider<
+          NotificationListenerService,
+          NotificationListenerService,
+          NotificationListenerService
+        >
+    with $Provider<NotificationListenerService> {
+  /// NotificationListenerService provider
+  const NotificationListenerServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'notificationListenerServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$notificationListenerServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<NotificationListenerService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  NotificationListenerService create(Ref ref) {
+    return notificationListenerService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NotificationListenerService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NotificationListenerService>(value),
+    );
+  }
+}
+
+String _$notificationListenerServiceHash() =>
+    r'a9f197fa7f5fa9ebd93df5c693ffde755c10c587';
+
 @ProviderFor(QuickActionSelection)
 const quickActionSelectionProvider = QuickActionSelectionProvider._();
 

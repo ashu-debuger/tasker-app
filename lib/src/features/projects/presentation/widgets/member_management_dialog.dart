@@ -33,6 +33,12 @@ class _MemberManagementDialogState
       projectMembersListProvider(widget.projectId),
     );
     final currentUser = ref.watch(authProvider).value;
+    final currentRoleAsync = currentUser != null
+        ? ref.watch(memberRoleProvider(widget.projectId, currentUser.id))
+        : const AsyncValue<ProjectRole?>.data(null);
+    final canManage =
+        (currentRoleAsync.asData?.value?.isAdmin ?? false) ||
+        currentUser?.id == widget.projectOwnerId;
     final membersState = ref.watch(projectMembersProvider);
 
     // Listen for state changes
@@ -111,9 +117,6 @@ class _MemberManagementDialogState
                       final member = members[index];
                       final isCurrentUser = currentUser?.id == member.userId;
                       final isOwner = member.userId == widget.projectOwnerId;
-                      final canManage =
-                          currentUser?.id == widget.projectOwnerId;
-
                       return _MemberListItem(
                         member: member,
                         isCurrentUser: isCurrentUser,

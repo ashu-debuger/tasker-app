@@ -45,7 +45,7 @@ final class InvitationNotifierProvider
 }
 
 String _$invitationNotifierHash() =>
-    r'55af06f9a2d158cd457850b8aabdff83a51fce1b';
+    r'ea34b1a5f9e44b3dfff4d6a1bc582d868085ea6c';
 
 /// Notifier for managing project invitations
 

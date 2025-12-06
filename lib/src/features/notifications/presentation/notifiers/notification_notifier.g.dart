@@ -33,7 +33,7 @@ final class NotificationListProvider
   NotificationList create() => NotificationList();
 }
 
-String _$notificationListHash() => r'905be486a3377378bebf82302d22d11dc93a718e';
+String _$notificationListHash() => r'146a39b9c39c299ed5a604fe77ba637617c7b6cf';
 
 abstract class _$NotificationList
     extends $StreamNotifier<List<AppNotification>> {

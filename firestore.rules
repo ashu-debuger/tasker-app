@@ -39,6 +39,16 @@ service cloud.firestore {
 
       // Notifications subcollection
       match /notifications/{notificationId} {
+        // Allow user to read/update/delete their own notifications
+        allow read, update, delete: if isOwner(userId);
+        // Allow any authenticated user to create notifications for this user
+        // (needed for invitations, task assignments, etc.)
+        allow create: if isAuthenticated();
+      }
+
+      // FCM tokens subcollection
+      match /fcmTokens/{token} {
+        // Users can only manage their own FCM tokens
         allow read, write: if isOwner(userId);
       }
 
