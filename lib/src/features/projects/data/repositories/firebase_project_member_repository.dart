@@ -95,6 +95,28 @@ class FirebaseProjectMemberRepository implements ProjectMemberRepository {
         'role': role.displayName,
       },
     );
+
+    // Send push notification for project invite
+    if (_notificationRepository != null) {
+      try {
+        await _notificationRepository.sendNotification(
+          userId: userId,
+          type: NotificationType.invitationReceived,
+          title: 'Project Invitation',
+          body:
+              '${firebaseUser.displayName ?? firebaseUser.email ?? 'Someone'} invited you to $projectName',
+          data: {
+            'projectId': projectId,
+            'projectName': projectName,
+            'role': role.name,
+            'invitedBy': firebaseUser.uid,
+          },
+        );
+      } catch (e) {
+        // Don't fail if push notification fails
+        print('Failed to send push notification: $e');
+      }
+    }
   }
 
   @override
